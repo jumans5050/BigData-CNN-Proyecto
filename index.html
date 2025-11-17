@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario del salón de cómputo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Inventario automático del salón de cómputo</h1>
+      <p>Modelo YOLO - Servidor Python</p>
+    </header>
+
+    <section class="uploader">
+      <p>Seleccione una imagen del salón para analizar:</p>
+      <div class="file-input-wrapper">
+        <input type="file" id="fileInput" accept="image/*">
+        <button id="btnRun" disabled>Detectar objetos</button>
+      </div>
+      <p id="status" class="status"></p>
+    </section>
+
+    <section class="canvas-wrap">
+      <div class="canvas-col">
+        <h3>Imagen original</h3>
+        <div class="canvas-frame">
+          <img id="img" alt="Imagen cargada">
+        </div>
+      </div>
+
+      <div class="canvas-col">
+        <h3>Resultado</h3>
+        <div class="canvas-frame">
+          <canvas id="canvas"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="counts-section">
+      <h3>Conteo de objetos detectados</h3>
+      <table id="countsTable">
+        <thead>
+          <tr>
+            <th>Objeto</th>
+            <th>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody id="countsBody"></tbody>
+      </table>
+    </section>
+
+    <footer>
+      <p>Desarrollado para la automatización de inventario del salón de cómputo.</p>
+    </footer>
+  </div>
+
+  <script>
+    const SERVER_URL = "http://127.0.0.1:5000";
+    const SCORE_TH = 0.45;
+
+    let classNames = [];
+
+    const fileInput = document.getElementById("fileInput");
+    const btnRun = document.getElementById("btnRun");
+    const statusEl = document.getElementById("status");
+    const imgEl = document.getElementById("img");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const countsBody = document.getElementById("countsBody");
+
+    async function init() {
+      try {
+        statusEl.textContent = "Conectando al servidor...";
+        const response = await fetch(SERVER_URL + "/health");
+        
+        if (response.ok) {
+          statusEl.textContent = "Conectado. Seleccione una imagen.";
+          btnRun.disabled = false;
+        } else {
+          statusEl.textContent = "Error: Servidor no disponible.";
+        }
+      } catch (err) {
+        console.error("Error:", err);
+        statusEl.textContent = "Error: No se puede conectar al servidor. Asegúrese de que está corriendo en puerto 5000.";
+      }
+    }
+
+    fileInput.addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = ev => {
+        imgEl.onload = () => {
+          canvas.width = imgEl.naturalWidth;
+          canvas.height = imgEl.naturalHeight;
+          ctx.drawImage(imgEl, 0, 0);
+          statusEl.textContent = "Imagen lista. Presione 'Detectar objetos'.";
+        };
+        imgEl.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    btnRun.addEventListener("click", async () => {
+      if (!imgEl.src) {
+        statusEl.textContent = "Debe cargar una imagen primero.";
+        return;
+      }
+
+      btnRun.disabled = true;
+      statusEl.textContent = "Procesando...";
+
+      try {
+        await detectar();
+        statusEl.textContent = "Deteccion completada.";
+      } catch (err) {
+        console.error("Error:", err);
+        statusEl.textContent = "Error durante la deteccion.";
+      } finally {
+        btnRun.disabled = false;
+      }
+    });
+
+    async function detectar() {
+      canvas.width = imgEl.naturalWidth;
+      canvas.height = imgEl.naturalHeight;
+      ctx.drawImage(imgEl, 0, 0);
+
+      const imageBase64 = canvas.toDataURL("image/jpeg");
+
+      const response = await fetch(SERVER_URL + "/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: imageBase64 })
+      });
+
+      if (!response.ok) {
+        throw new Error("Error del servidor: " + response.status);
+      }
+
+      const data = await response.json();
+      const detections = data.detections || [];
+
+      dibujar(detections);
+      actualizarTabla(detections);
+    }
+
+    function dibujar(dets) {
+      ctx.drawImage(imgEl, 0, 0);
+      ctx.lineWidth = 2;
+      ctx.font = "14px system-ui";
+
+      dets.forEach(d => {
+        const x = d.x1;
+        const y = d.y1;
+        const w = d.x2 - d.x1;
+        const h = d.y2 - d.y1;
+
+        ctx.strokeStyle = "#00ffff";
+        ctx.strokeRect(x, y, w, h);
+
+        const label = d.class_name + " " + (d.confidence * 100).toFixed(1) + "%";
+        const tw = ctx.measureText(label).width + 6;
+
+        ctx.fillStyle = "#00ffff";
+        ctx.fillRect(x, y - 18, tw, 18);
+        ctx.fillStyle = "#000";
+        ctx.fillText(label, x + 3, y - 5);
+      });
+    }
+
+    function actualizarTabla(dets) {
+      const counts = {};
+      dets.forEach(d => {
+        const name = d.class_name;
+        counts[name] = (counts[name] || 0) + 1;
+      });
+
+      countsBody.innerHTML = "";
+      Object.entries(counts).forEach(([name, c]) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = "<td>" + name + "</td><td>" + c + "</td>";
+        countsBody.appendChild(tr);
+      });
+    }
+
+    window.addEventListener("load", init);
+  </script>
+</body>
+</html>

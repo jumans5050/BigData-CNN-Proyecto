@@ -1,0 +1,6 @@
+cpu
+mesa
+mouse
+pantalla
+silla
+teclado

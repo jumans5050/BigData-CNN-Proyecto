@@ -34,7 +34,7 @@ cd proyecto_inventario
 pip install -r requirements.txt
 ```
 
-Si tienes problemas con NumPy, ejecuta:
+Si tiene problemas con NumPy, ejecute:
 
 ```bash
 pip install "numpy<2"
@@ -51,6 +51,8 @@ Debes obtenerlo de una de estas formas:
 Si tienes dificultades o quieres todo listo de una vez, descarga el archivo completo desde Google Drive:
 
 **[DESCARGAR PROYECTO COMPLETO CON MODELO](https://drive.google.com/file/d/1zjUz9k0nU72QeMyFWKnH0dsKPCSQlGSy/view?usp=drive_link)**
+
+**[Visualizar el codigo del entrenamiento en colab](https://colab.research.google.com/drive/1I5JoN4pPWJ7nf4qonWL7sEuy4gLmoKZb?usp=sharing)**
 
 Este archivo `.rar` contiene:
 - Proyecto completo estructurado

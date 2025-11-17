@@ -52,7 +52,7 @@ Si tienes dificultades o quieres todo listo de una vez, descarga el archivo comp
 
 **[DESCARGAR PROYECTO COMPLETO CON MODELO](https://drive.google.com/file/d/1zjUz9k0nU72QeMyFWKnH0dsKPCSQlGSy/view?usp=drive_link)**
 
-** [RESULTADOS DEL MODELO](https://drive.google.com/drive/folders/1OSUi5Hjjfz6vynLLqkKrqY9-jqEFIf-a?usp=drive_link)**
+**[RESULTADOS DEL MODELO](https://drive.google.com/drive/folders/1OSUi5Hjjfz6vynLLqkKrqY9-jqEFIf-a?usp=drive_link)**
 
 **[CUADERNO DE ENTRENAMIENTO DEL MODLEO EN COLAB](https://colab.research.google.com/drive/1I5JoN4pPWJ7nf4qonWL7sEuy4gLmoKZb?usp=sharing)**
 
